@@ -6,9 +6,29 @@
 
 ```bash
 cd pokemon_battler
+# 1. Unzip the sprite packs (one time) — see "Assets" below
+cd assets && unzip Pokemon.zip && unzip items.zip && cd ..
+# 2. Install dependencies and start
 python -m pip install -r requirements.txt
 python main.py
 ```
+
+The game scales its 1280×760 interface to fit the window, so it also fits small screens.
+
+### Termux (Android) + Termux:X11
+
+`pygame-ce` cannot be built on Android, so install the original `pygame` instead of using `requirements.txt`:
+
+```bash
+pkg install x11-repo
+pkg install python clang make pkg-config sdl2 sdl2-image sdl2-mixer sdl2-ttf freetype libpng libjpeg-turbo portmidi unzip
+pip install pygame
+termux-x11 :0 &
+export DISPLAY=:0
+python main.py
+```
+
+No other third-party packages are needed (`pytest` is optional, for the tests).
 
 Tests (from the repository root):
 
@@ -20,14 +40,27 @@ No game-time internet connection is used. The Pygame presentation now uses Gener
 
 ### Assets
 
+All sprites and icons ship as two zip files in `assets/`. **Unzip both inside `assets/` before running the game** (the game reads the extracted PNGs, not the zips):
+
 ```text
-assets/pokemon/front/<dex>.png   151 files (64x64, RGBA)
-assets/pokemon/back/<dex>.png    151 files (64x64, RGBA)
-assets/items/<item-id>.png       647 item icons from the supplied pack + 3 generated icons
-                                 (heavy-duty-boots, normalium-z, z-crystal had no sprite in the pack)
+assets/
+├── Pokemon.zip   →  extracts to  pokemon/front/<dex>.png   (151 front sprites, 64×64 RGBA)
+│                                 pokemon/back/<dex>.png    (151 back sprites, 64×64 RGBA)
+└── items.zip     →  extracts to  items/<item-id>.png       (650 item icons, 30×30 RGBA)
 ```
 
-Item icon filenames match the ids in `engine/content.py` (`ITEMS`), so a new item only needs a PNG with its id. Pokémon artwork is © Nintendo / Creatures Inc. / Game Freak; it is included here for personal, non-commercial fan use only and should not be redistributed commercially.
+```bash
+cd assets
+unzip Pokemon.zip
+unzip items.zip
+```
+
+After extracting, the folder should look like `assets/pokemon/front/1.png` … `assets/pokemon/back/151.png` and `assets/items/leftovers.png`.
+
+- Pokémon files are named by National Dex number (Bulbasaur = `1.png`, Mew = `151.png`) and come from the Generation III FireRed/LeafGreen sprite set.
+- Item icon filenames match the ids in `engine/content.py` (`ITEMS`), so a new item only needs a PNG with its id. 647 icons come from the supplied item pack; `heavy-duty-boots`, `normalium-z` and `z-crystal` had no sprite in the pack and are generated icons.
+- If a file is missing (for example the zips were not extracted), the UI falls back to the old abstract marker instead of crashing.
+- Pokémon artwork is © Nintendo / Creatures Inc. / Game Freak; it is included for personal, non-commercial fan use only and should not be redistributed commercially.
 
 ## Current playable build
 
@@ -59,6 +92,7 @@ The application launches into a desktop menu with **Play Tactical Battle**, **Te
 engine/        authoritative, UI-independent models / state machine / damage / rules
 ai/            fair-information controller, opponent model, bounded predictive evaluator
 gui/           Pygame desktop presentation and interaction only
+assets/        Pokemon.zip and items.zip (sprites and item icons; unzip before running)
 data/          normalized offline roster/catalog/learnset data
 tools/         reproducible PokeAPI CSV import scripts
 teams/         user team JSONs
